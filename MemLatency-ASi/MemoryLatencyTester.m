@@ -23,14 +23,14 @@
     
     self.isCancelled = NO;
 
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
         if (testOnECore) {
-            struct sched_param param;
-            param.sched_priority = 6;
-            pthread_setschedparam(pthread_self(), SCHED_OTHER, &param);
+            pthread_set_qos_class_self_np(9, 0);
+        } else {
+            pthread_set_qos_class_self_np(33, 0);
         }
-        
+
         NSArray<NSNumber *> *sortedSizes = [[testParameters allKeys] sortedArrayUsingSelector:@selector(compare:)];
 
         for (NSNumber *sizeNumber in sortedSizes) {

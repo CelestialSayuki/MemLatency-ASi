@@ -64,7 +64,6 @@
             uint64_t elapsed = endTime > startTime ? endTime - startTime : 0;
             uint64_t elapsedNanos = elapsed * timebase.numer / timebase.denom;
             double latency = (double)elapsedNanos / currentIterations;
-            NSLog(@"Size: %ld KB, Elapsed: %llu ns, Iterations: %ld, Latency: %f ns", sizeKb, elapsedNanos, currentIterations, latency);
 
             if (latency > 0) {
                 dispatch_async(dispatch_get_main_queue(), ^{

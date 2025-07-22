@@ -12,9 +12,13 @@ typedef void (^TestCompletionBlock)(void);
 
 @interface MemoryLatencyTester : NSObject
 
+@property (atomic) BOOL isCancelled;
+
+- (void)stopTest;
+
 - (void)runLatencyTestsWithParameters:(NSDictionary<NSNumber *, NSNumber *> *)testParameters
-                          testOnECore:(BOOL)testOnECore
-                             progress:(TestProgressBlock)progress
-                           completion:(TestCompletionBlock)completion;
+                        testOnECore:(BOOL)testOnECore
+                           progress:(TestProgressBlock)progress
+                         completion:(TestCompletionBlock)completion;
 
 @end

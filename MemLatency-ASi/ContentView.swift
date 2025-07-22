@@ -128,6 +128,20 @@ class AppViewModel: ObservableObject {
         return run.results
     }
     
+    func stopTesting() {
+        guard isTesting else { return }
+        
+        memoryTester.stopTest()
+        
+        isTesting = false
+        statusMessage = "Test stopped by user."
+        
+        if let lastRun = history.last, lastRun.results.count < testParametersList.count {
+             history.removeLast()
+             selectedRunID = history.last?.id
+        }
+    }
+    
     func startTesting() {
         guard !isTesting else { return }
             
@@ -137,9 +151,7 @@ class AppViewModel: ObservableObject {
             
         let newRun = TestRun(coreType: coreName, timestamp: Date(), results: [])
         history.append(newRun)
-        if selectedRunID == nil {
-            selectedRunID = newRun.id
-        }
+        selectedRunID = newRun.id
             
         memoryTester.runLatencyTests(
             withParameters: self.testParameters,
@@ -364,7 +376,9 @@ struct SettingsView: View {
             .padding()
             .background(.bar)
         }
-        .frame(minWidth: 500, minHeight: 450, idealHeight: 500, maxHeight: 700)
+        #if os(macOS)
+.       frame(minWidth: 500, minHeight: 450, idealHeight: 500, maxHeight: 700)
+        #endif
     }
 }
 
@@ -520,20 +534,35 @@ struct ControlPanelView: View {
                 .tint(viewModel.testOnECore ? .blue : .red)
                 .disabled(viewModel.isTesting)
 
-                Button(action: {
-                    viewModel.startTesting()
-                }) {
-                    HStack {
-                        Image(systemName: viewModel.isTesting ? "hourglass" : "play.fill")
-                        Text(viewModel.isTesting ? "Testing..." : "Start Test")
+                if viewModel.isTesting {
+                    Button(action: {
+                        viewModel.stopTesting()
+                    }) {
+                        HStack {
+                            Image(systemName: "stop.fill")
+                            Text("Stop")
+                        }
+                        .fontWeight(.bold)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
                     }
-                    .fontWeight(.bold)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+                } else {
+                    Button(action: {
+                        viewModel.startTesting()
+                    }) {
+                        HStack {
+                            Image(systemName: "play.fill")
+                            Text("Start Test")
+                        }
+                        .fontWeight(.bold)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-                .disabled(viewModel.isTesting)
             }
         }
         .padding()

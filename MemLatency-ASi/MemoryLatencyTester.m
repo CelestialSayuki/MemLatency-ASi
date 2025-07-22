@@ -12,10 +12,16 @@
 
 @implementation MemoryLatencyTester
 
+- (void)stopTest {
+    self.isCancelled = YES;
+}
+
 - (void)runLatencyTestsWithParameters:(NSDictionary<NSNumber *, NSNumber *> *)testParameters
-                          testOnECore:(BOOL)testOnECore
-                             progress:(TestProgressBlock)progress
-                           completion:(TestCompletionBlock)completion {
+                        testOnECore:(BOOL)testOnECore
+                           progress:(TestProgressBlock)progress
+                         completion:(TestCompletionBlock)completion {
+    
+    self.isCancelled = NO;
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         
@@ -28,8 +34,11 @@
         NSArray<NSNumber *> *sortedSizes = [[testParameters allKeys] sortedArrayUsingSelector:@selector(compare:)];
 
         for (NSNumber *sizeNumber in sortedSizes) {
-            NSInteger sizeKb = [sizeNumber integerValue];
+            if (self.isCancelled) {
+                break;
+            }
             
+            NSInteger sizeKb = [sizeNumber integerValue];
             NSInteger currentIterations = [testParameters[sizeNumber] integerValue];
             
             mach_timebase_info_data_t timebase;
@@ -54,6 +63,9 @@
             
             volatile uint32_t current = testArr[0];
             for (NSInteger i = 0; i < currentIterations; i++) {
+                if ((i & 0xFFFFF) == 0 && self.isCancelled) {
+                    break;
+                }
                 current = testArr[current];
             }
 
@@ -61,13 +73,17 @@
 
             free(testArr);
 
+            if (self.isCancelled) {
+                break;
+            }
+            
             uint64_t elapsed = endTime > startTime ? endTime - startTime : 0;
             uint64_t elapsedNanos = elapsed * timebase.numer / timebase.denom;
             double latency = (double)elapsedNanos / currentIterations;
 
             if (latency > 0) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    progress(latency, sizeKb);
+                    progress(latency, (int)sizeKb);
                 });
             }
         }

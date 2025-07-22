@@ -9,8 +9,6 @@ import SwiftUI
 import Charts
 import UniformTypeIdentifiers
 
-// MARK: - App Models and ViewModel
-
 struct TestResult: Codable, Equatable, Hashable {
     let sizeKb: Int
     let latency: Double
@@ -95,8 +93,8 @@ class AppViewModel: ObservableObject {
         var params: [NSNumber: NSNumber] = [:]
         for param in testParametersList {
             if let size = Int(param.size.trimmingCharacters(in: .whitespaces)),
-               let iterations = Int(param.iterations.trimmingCharacters(in: .whitespaces)),
-               size > 0 && iterations > 0 {
+                let iterations = Int(param.iterations.trimmingCharacters(in: .whitespaces)),
+                size > 0 && iterations > 0 {
                 params[NSNumber(value: size)] = NSNumber(value: iterations)
             }
         }
@@ -115,17 +113,17 @@ class AppViewModel: ObservableObject {
     
     func startTesting() {
         guard !isTesting else { return }
-        
+            
         isTesting = true
         let coreName = testOnECore ? "Efficiency Core" : "Performance Core"
         statusMessage = "Preparing test on \(coreName)..."
-        
+            
         let newRun = TestRun(coreType: coreName, timestamp: Date(), results: [])
         history.append(newRun)
         if selectedRunID == nil {
             selectedRunID = newRun.id
         }
-        
+            
         memoryTester.runLatencyTests(
             withParameters: self.testParameters,
             testOnECore: self.testOnECore,
@@ -149,8 +147,6 @@ class AppViewModel: ObservableObject {
     }
 }
 
-// MARK: - Main ContentView and Subviews
-
 struct ContentView: View {
     @StateObject private var viewModel = AppViewModel()
     @State private var isExporting = false
@@ -170,8 +166,6 @@ struct ContentView: View {
         #endif
     }
     
-    // MARK: - Platform-Specific Root Views
-
     private var macOSContentView: some View {
         NavigationSplitView {
             HistoryListView(viewModel: viewModel)
@@ -202,7 +196,6 @@ struct ContentView: View {
                     }
                 }
         }
-        // ★★★ 修正1: 将此修饰符包裹在 #if os(iOS) 中 ★★★
         #if os(iOS)
         .navigationViewStyle(.stack)
         #endif
@@ -214,8 +207,6 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Reusable View Components
-    
     private var detailView: some View {
         VStack(spacing: 0) {
             LatencyChartView(results: viewModel.selectedResults)
@@ -224,7 +215,6 @@ struct ContentView: View {
             ControlPanelView(viewModel: viewModel)
         }
         .navigationTitle("Latency Results")
-        // ★★★ 修正2: 将此修饰符包裹在 #if os(iOS) 中 ★★★
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -255,8 +245,6 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Helper Methods
-    
     private func exportAction() {
         self.documentToExport = TestResultDocument(results: viewModel.selectedResults)
         self.isExporting = true
@@ -272,7 +260,6 @@ struct ContentView: View {
     }
 }
 
-/// 独立的左侧历史列表视图，所有平台共用
 struct HistoryListView: View {
     @ObservedObject var viewModel: AppViewModel
     
@@ -296,8 +283,6 @@ struct HistoryListView: View {
     }
 }
 
-
-// --- SettingsView, LatencyChartView, 和 ControlPanelView 保持不变 ---
 struct SettingsView: View {
     @ObservedObject var viewModel: AppViewModel
     @Environment(\.dismiss) private var dismiss
